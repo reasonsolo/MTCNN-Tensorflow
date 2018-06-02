@@ -7,7 +7,7 @@ import argparse
 import os
 import cPickle as pickle
 import cv2
-from train_models.mtcnn_model import P_Net,R_Net
+from train_models.mtcnn_model import P_Net,R_Net, O_Net
 from train_models.MTCNN_config import config
 from loader import TestLoader
 from Detection.detector import Detector
@@ -28,7 +28,6 @@ def save_hard_example(net, data,save_path):
 
     print("processing %d images in total" % num_of_images)
 
-    
     # save files
     neg_label_file = "%d/neg_%d.txt" % (net, image_size)
     neg_file = open(neg_label_file, 'w')
@@ -82,7 +81,7 @@ def save_hard_example(net, data,save_path):
                                     interpolation=cv2.INTER_LINEAR)
 
             # save negative images and write label
-            # Iou with all gts must below 0.3            
+            # Iou with all gts must below 0.3
             if np.max(Iou) < 0.3 and neg_num < 60:
                 #save the examples
                 save_file = get_path(neg_dir, "%s.jpg" % n_idx)
@@ -149,8 +148,8 @@ def t_net(prefix, epoch,
         print("==================================", test_mode)
         ONet = Detector(O_Net, 48, batch_size[2], model_path[2])
         detectors[2] = ONet
-        
-    basedir = '.'    
+
+    basedir = '.'
     #anno_file
     filename = './wider_face_train_bbx_gt.txt'
     #read annatation(type:dict)
@@ -212,7 +211,7 @@ def parse_args():
 
 if __name__ == '__main__':
 
-    net = 'ONet'
+    net = 'ONet' # change this
     if net == "RNet":
         image_size = 24
     if net == "ONet":
@@ -220,11 +219,11 @@ if __name__ == '__main__':
 
     base_dir = '../prepare_data/WIDER_train'
     data_dir = '%s' % str(image_size)
-    
+
     neg_dir = get_path(data_dir, 'negative')
     pos_dir = get_path(data_dir, 'positive')
     part_dir = get_path(data_dir, 'part')
-    #create dictionary shuffle   
+    #create dictionary shuffle
     for dir_path in [neg_dir, pos_dir, part_dir]:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
@@ -232,14 +231,14 @@ if __name__ == '__main__':
     args = parse_args()
 
     print 'Called with argument:'
-    print args 
+    print args
     t_net(args.prefix,#model param's file
           args.epoch, #final epoches
-          args.batch_size, #test batch_size 
+          args.batch_size, #test batch_size
           args.test_mode,#test which model
           args.thresh, #cls threshold
           args.min_face, #min_face
           args.stride,#stride
-          args.slide_window, 
-          args.shuffle, 
+          args.slide_window,
+          args.shuffle,
           vis=False)

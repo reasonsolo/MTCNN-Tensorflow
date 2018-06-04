@@ -31,7 +31,7 @@ def drawLandmark(img, bbox, landmark):
         cv2.circle(img, (int(x), int(y)), 2, (0,255,0), -1)
     return img
 
-def getDataFromTxt(txt, with_landmark=True):
+def getDataFromTxt(txt, with_landmark=True, landmark_size = 5):
     """
         Generate data from txt file
         return [(img_path, bbox, landmark)]
@@ -50,16 +50,17 @@ def getDataFromTxt(txt, with_landmark=True):
         img_path = os.path.join(dirname, components[0]) # file path
         # bounding box, (x1, y1, x2, y2)
         #bbox = (components[1], components[2], components[3], components[4])
-        bbox = (components[1], components[3], components[2], components[4])        
+        bbox = (components[1], components[3], components[2], components[4])
         bbox = [float(_) for _ in bbox]
         bbox = map(int,bbox)
         # landmark
         if not with_landmark:
             result.append((img_path, BBox(bbox)))
             continue
-        landmark = np.zeros((5, 2))
-        for index in range(0, 5):
-            rv = (float(components[5+2*index]), float(components[5+2*index+1]))
+        landmark = np.zeros((landmark_size, 2))
+        for index in range(0, landmark_size):
+            rv = (float(components[landmark_size+2*index]),
+                  float(components[landmark_size+2*index+1]))
             landmark[index] = rv
         #normalize
         '''
@@ -127,7 +128,7 @@ class BBox(object):
         self.top = bbox[1]
         self.right = bbox[2]
         self.bottom = bbox[3]
-        
+
         self.x = bbox[0]
         self.y = bbox[1]
         self.w = bbox[2] - bbox[0]

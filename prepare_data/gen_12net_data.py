@@ -5,12 +5,16 @@ import cv2
 import os
 import numpy.random as npr
 from utils import IoU
+from train_models.MTCNN_config import config
+
+image_size = config.PNET_IMAGE_SIZE
 anno_file = "wider_face_train.txt"
 im_dir = "WIDER_train/images"
-pos_save_dir = "12/positive"
-part_save_dir = "12/part"
-neg_save_dir = '12/negative'
-save_dir = "./12"
+pos_save_dir = "%d/positive" % image_size
+part_save_dir = "%d/part" % image_size
+neg_save_dir = '%d/negative' % image_size
+save_dir = "./%d" % image_size
+
 if not os.path.exists(save_dir):
     os.mkdir(save_dir)
 if not os.path.exists(pos_save_dir):
@@ -45,13 +49,13 @@ for annotation in annotations:
     idx += 1
     if idx % 100 == 0:
         print idx, "images done"
-        
+
     height, width, channel = img.shape
 
     neg_num = 0
     #1---->50
     while neg_num < 50:
-        #neg_num's size [40,min(width, height) / 2],min_size:40 
+        #neg_num's size [40,min(width, height) / 2],min_size:40
         size = npr.randint(12, min(width, height) / 2)
         #top_left
         nx = npr.randint(0, width - size)
@@ -60,7 +64,7 @@ for annotation in annotations:
         crop_box = np.array([nx, ny, nx + size, ny + size])
         #cal iou
         Iou = IoU(crop_box, boxes)
-        
+
         cropped_im = img[ny : ny + size, nx : nx + size, :]
         resized_im = cv2.resize(cropped_im, (12, 12), interpolation=cv2.INTER_LINEAR)
 
@@ -95,16 +99,16 @@ for annotation in annotations:
                 continue
             crop_box = np.array([nx1, ny1, nx1 + size, ny1 + size])
             Iou = IoU(crop_box, boxes)
-    
+
             cropped_im = img[ny1: ny1 + size, nx1: nx1 + size, :]
             resized_im = cv2.resize(cropped_im, (12, 12), interpolation=cv2.INTER_LINEAR)
-    
+
             if np.max(Iou) < 0.3:
                 # Iou with all gts must below 0.3
                 save_file = os.path.join(neg_save_dir, "%s.jpg" % n_idx)
                 f2.write("12/negative/%s.jpg" % n_idx + ' 0\n')
                 cv2.imwrite(save_file, resized_im)
-                n_idx += 1        
+                n_idx += 1
 	# generate positive examples and part faces
         for i in range(20):
             # pos and part face size [minsize*0.8,maxsize*1.25]
@@ -121,7 +125,7 @@ for annotation in annotations:
             ny2 = ny1 + size
 
             if nx2 > width or ny2 > height:
-                continue 
+                continue
             crop_box = np.array([nx1, ny1, nx2, ny2])
             #yu gt de offset
             offset_x1 = (x1 - nx1) / float(size)

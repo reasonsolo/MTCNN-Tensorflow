@@ -38,7 +38,7 @@ def rotate(img, bbox, landmark, alpha):
     img_rotated_by_alpha = cv2.warpAffine(img, rot_mat,(img.shape[1],img.shape[0]))
     landmark_ = np.asarray([(rot_mat[0][0]*x+rot_mat[0][1]*y+rot_mat[0][2],
                  rot_mat[1][0]*x+rot_mat[1][1]*y+rot_mat[1][2]) for (x, y) in landmark])
-    #crop face 
+    #crop face
     face = img_rotated_by_alpha[bbox.top:bbox.bottom+1,bbox.left:bbox.right+1]
     return (face, landmark_)
 
@@ -52,6 +52,8 @@ def flip(face, landmark):
     landmark_ = np.asarray([(1-x, y) for (x, y) in landmark])
     landmark_[[0, 1]] = landmark_[[1, 0]]#left eye<->right eye
     landmark_[[3, 4]] = landmark_[[4, 3]]#left mouth<->right mouth
+
+    for
     return (face_flipped_by_x, landmark_)
 
 def randomShift(landmarkGt, shift):

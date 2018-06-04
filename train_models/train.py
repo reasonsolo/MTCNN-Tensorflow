@@ -42,21 +42,22 @@ def random_flip_images(image_batch,label_batch,landmark_batch):
     #the index of image needed to flip
     indexes = np.where(random_number>0)[0]
     fliplandmarkindexes = np.where(label_batch[indexes]==-2)[0]
-    
-    #random flip    
+
+    #random flip
     for i in indexes:
         cv2.flip(image_batch[i],1,image_batch[i])
-    #pay attention: flip landmark    
+    #pay attention: flip landmark
     for i in fliplandmarkindexes:
         landmark_ = landmark_batch[i].reshape((-1,2))
         landmark_ = np.asarray([(1-x, y) for (x, y) in landmark_])
         landmark_[[0, 1]] = landmark_[[1, 0]]#left eye<->right eye
-        landmark_[[3, 4]] = landmark_[[4, 3]]#left mouth<->right mouth        
+        landmark_[[3, 4]] = landmark_[[4, 3]]#left mouth<->right mouth
         landmark_batch[i] = landmark_.ravel()
     return image_batch,landmark_batch
 '''
 # all mini-batch mirror
 def random_flip_images(image_batch,label_batch,landmark_batch):
+    # TODO:  flip over landmarks
     #mirror
     if random.choice([0,1]) > 0:
         num_images = image_batch.shape[0]
@@ -64,18 +65,18 @@ def random_flip_images(image_batch,label_batch,landmark_batch):
         flipposindexes = np.where(label_batch==1)[0]
         #only flip
         flipindexes = np.concatenate((fliplandmarkindexes,flipposindexes))
-        #random flip    
+        #random flip
         for i in flipindexes:
-            cv2.flip(image_batch[i],1,image_batch[i])        
-        
-        #pay attention: flip landmark    
+            cv2.flip(image_batch[i],1,image_batch[i])
+
+        #pay attention: flip landmark
         for i in fliplandmarkindexes:
             landmark_ = landmark_batch[i].reshape((-1,2))
             landmark_ = np.asarray([(1-x, y) for (x, y) in landmark_])
             landmark_[[0, 1]] = landmark_[[1, 0]]#left eye<->right eye
-            landmark_[[3, 4]] = landmark_[[4, 3]]#left mouth<->right mouth        
+            landmark_[[3, 4]] = landmark_[[4, 3]]#left mouth<->right mouth
             landmark_batch[i] = landmark_.ravel()
-        
+
     return image_batch,landmark_batch
 
 def train(net_factory, prefix, end_epoch, base_dir,
@@ -94,7 +95,7 @@ def train(net_factory, prefix, end_epoch, base_dir,
     #label file
     label_file = os.path.join(base_dir,'train_%s_landmark.txt' % net)
     #label_file = os.path.join(base_dir,'landmark_12_few.txt')
-    print label_file 
+    print label_file
     f = open(label_file, 'r')
     num = len(f.readlines())
     print("Total datasets is: ", num)
@@ -106,8 +107,8 @@ def train(net_factory, prefix, end_epoch, base_dir,
         dataset_dir = os.path.join(base_dir,'train_%s_landmark.tfrecord_shuffle' % net)
         print dataset_dir
         image_batch, label_batch, bbox_batch,landmark_batch = read_single_tfrecord(dataset_dir, config.BATCH_SIZE, net)
-        
-    #RNet use 3 tfrecords to get data    
+
+    #RNet use 3 tfrecords to get data
     else:
         pos_dir = os.path.join(base_dir,'pos_landmark.tfrecord_shuffle')
         part_dir = os.path.join(base_dir,'part_landmark.tfrecord_shuffle')
@@ -118,30 +119,32 @@ def train(net_factory, prefix, end_epoch, base_dir,
         pos_batch_size = int(np.ceil(config.BATCH_SIZE*pos_radio))
         assert pos_batch_size != 0,"Batch Size Error "
         part_batch_size = int(np.ceil(config.BATCH_SIZE*part_radio))
-        assert part_batch_size != 0,"Batch Size Error "        
+        assert part_batch_size != 0,"Batch Size Error "
         neg_batch_size = int(np.ceil(config.BATCH_SIZE*neg_radio))
         assert neg_batch_size != 0,"Batch Size Error "
         landmark_batch_size = int(np.ceil(config.BATCH_SIZE*landmark_radio))
         assert landmark_batch_size != 0,"Batch Size Error "
         batch_sizes = [pos_batch_size,part_batch_size,neg_batch_size,landmark_batch_size]
-        image_batch, label_batch, bbox_batch,landmark_batch = read_multi_tfrecords(dataset_dirs,batch_sizes, net)        
-        
-    #landmark_dir    
+        image_batch, label_batch, bbox_batch,landmark_batch = read_multi_tfrecords(dataset_dirs,batch_sizes, net)
+
+    #landmark_dir
     if net == 'PNet':
-        image_size = 12
-        radio_cls_loss = 1.0;radio_bbox_loss = 0.5;radio_landmark_loss = 0.5;
+        image_size = config.PNET_IMAGE_SIZE
+        radio_cls_loss = 1.0;radio_bbox_loss = 0.5;radio_landmark_loss = 0.2;
     elif net == 'RNet':
-        image_size = 24
-        radio_cls_loss = 1.0;radio_bbox_loss = 0.5;radio_landmark_loss = 0.5;
+        image_size = config.RNET_IMAGE_SIZE
+        radio_cls_loss = 1.0;radio_bbox_loss = 0.5;radio_landmark_loss = 0.2;
     else:
         radio_cls_loss = 1.0;radio_bbox_loss = 0.5;radio_landmark_loss = 1.0;
-        image_size = 48
-    
+        image_size = config.ONET_IMAGE_SIZE
+
+    landmark_size = config.LANDMARK_SIZE
+
     #define placeholder
     input_image = tf.placeholder(tf.float32, shape=[config.BATCH_SIZE, image_size, image_size, 3], name='input_image')
     label = tf.placeholder(tf.float32, shape=[config.BATCH_SIZE], name='label')
     bbox_target = tf.placeholder(tf.float32, shape=[config.BATCH_SIZE, 4], name='bbox_target')
-    landmark_target = tf.placeholder(tf.float32,shape=[config.BATCH_SIZE,10],name='landmark_target')
+    landmark_target = tf.placeholder(tf.float32,shape=[config.BATCH_SIZE, landmark_size * 2],name='landmark_target')
     #class,regression
     cls_loss_op,bbox_loss_op,landmark_loss_op,L2_loss_op,accuracy_op = net_factory(input_image, label, bbox_target,landmark_target,training=True)
     #train,update learning rate(3 loss)
@@ -162,7 +165,7 @@ def train(net_factory, prefix, end_epoch, base_dir,
     if os.path.exists(logs_dir) == False:
         os.mkdir(logs_dir)
     writer = tf.summary.FileWriter(logs_dir,sess.graph)
-    #begin 
+    #begin
     coord = tf.train.Coordinator()
     #begin enqueue thread
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
@@ -170,7 +173,7 @@ def train(net_factory, prefix, end_epoch, base_dir,
     #total steps
     MAX_STEP = int(num / config.BATCH_SIZE + 1) * end_epoch
     epoch = 0
-    sess.graph.finalize()    
+    sess.graph.finalize()
     try:
         for step in range(MAX_STEP):
             i = i + 1
@@ -189,11 +192,11 @@ def train(net_factory, prefix, end_epoch, base_dir,
             print landmark_batch_array[0]
             '''
             _,_,summary = sess.run([train_op, lr_op ,summary_op], feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array,landmark_target:landmark_batch_array})
-            
+
             if (step+1) % display == 0:
                 #acc = accuracy(cls_pred, labels_batch)
                 cls_loss, bbox_loss,landmark_loss,L2_loss,lr,acc = sess.run([cls_loss_op, bbox_loss_op,landmark_loss_op,L2_loss_op,lr_op,accuracy_op],
-                                                             feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array, landmark_target: landmark_batch_array})                
+                                                             feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array, landmark_target: landmark_batch_array})
                 print("%s : Step: %d, accuracy: %3f, cls loss: %4f, bbox loss: %4f, landmark loss: %4f,L2 loss: %4f,lr:%f " % (
                 datetime.now(), step+1, acc, cls_loss, bbox_loss, landmark_loss, L2_loss, lr))
             #save every two epochs

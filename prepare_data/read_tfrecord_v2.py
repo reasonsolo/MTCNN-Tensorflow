@@ -4,9 +4,11 @@ import tensorflow as tf
 import numpy as np
 import cv2
 import os
+from train_models.MTCNN_config import config
+
 #just for RNet and ONet, since I change the method of making tfrecord
 #as for PNet
-def read_single_tfrecord(tfrecord_file, batch_size, net):
+def read_single_tfrecord(tfrecord_file, batch_size, net, landmark_len):
     # generate a input queue
     # each epoch shuffle
     filename_queue = tf.train.string_input_producer([tfrecord_file],shuffle=True)
@@ -19,7 +21,7 @@ def read_single_tfrecord(tfrecord_file, batch_size, net):
             'image/encoded': tf.FixedLenFeature([], tf.string),#one image  one record
             'image/label': tf.FixedLenFeature([], tf.int64),
             'image/roi': tf.FixedLenFeature([4], tf.float32),
-            'image/landmark': tf.FixedLenFeature([10],tf.float32)
+            'image/landmark': tf.FixedLenFeature([landmark_len],tf.float32)
         }
     )
     if net == 'PNet':
@@ -31,7 +33,7 @@ def read_single_tfrecord(tfrecord_file, batch_size, net):
     image = tf.decode_raw(image_features['image/encoded'], tf.uint8)
     image = tf.reshape(image, [image_size, image_size, 3])
     image = (tf.cast(image, tf.float32)-127.5) / 128
-    
+
     # image = tf.image.per_image_standardization(image)
     label = tf.cast(image_features['image/label'], tf.float32)
     roi = tf.cast(image_features['image/roi'],tf.float32)
@@ -44,7 +46,7 @@ def read_single_tfrecord(tfrecord_file, batch_size, net):
     )
     label = tf.reshape(label, [batch_size])
     roi = tf.reshape(roi,[batch_size,4])
-    landmark = tf.reshape(landmark,[batch_size,10])
+    landmark = tf.reshape(landmark,[batch_size,landmark_size])
     return image, label, roi,landmark
 
 def read_multi_tfrecords(tfrecord_files, batch_sizes, net):
@@ -59,7 +61,7 @@ def read_multi_tfrecords(tfrecord_files, batch_sizes, net):
     print neg_image.get_shape()
     landmark_image,landmark_label,landmark_roi,landmark_landmark = read_single_tfrecord(landmark_dir, landmark_batch_size, net)
     print landmark_image.get_shape()
-    
+
     images = tf.concat([pos_image,part_image,neg_image,landmark_image], 0, name="concat/image")
     print images.get_shape()
     labels = tf.concat([pos_label,part_label,neg_label,landmark_label],0,name="concat/label")
@@ -68,14 +70,15 @@ def read_multi_tfrecords(tfrecord_files, batch_sizes, net):
     print rois.get_shape()
     landmarks = tf.concat([pos_landmark,part_landmark,neg_landmark,landmark_landmark],0,name="concat/landmark")
     return images,labels,rois,landmarks
-    
+
 def read():
     BATCH_SIZE = 64
     net = 'PNet'
     dataset_dir = "imglists/PNet"
     landmark_dir = os.path.join(dataset_dir,'train_PNet_ALL_few.tfrecord_shuffle')
     images, labels, rois,landmarks  = read_single_tfrecord(landmark_dir, BATCH_SIZE, net)
-    
+    landmark_len = config.LANDMARK_SIZE * 2
+
     '''
     pos_dir = os.path.join(dataset_dir,'pos.tfrecord_shuffle')
     part_dir = os.path.join(dataset_dir,'part.tfrecord_shuffle')
@@ -113,12 +116,12 @@ def read():
         #print roi_batch
         #print landmark_batch
         print label_batch
-        
-        for j in range(5):
+
+        for j in range():
             cv2.circle(cc,(int(landmark_batch[i][2*j]*120),int(landmark_batch[i][2*j+1]*120)),3,(0,0,255))
-        
+
         cv2.imshow("lala",cc)
         cv2.waitKey()
-    
+
 if __name__ == '__main__':
     read()

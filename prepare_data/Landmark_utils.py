@@ -42,11 +42,12 @@ def rotate(img, bbox, landmark, alpha):
     face = img_rotated_by_alpha[bbox.top:bbox.bottom+1,bbox.left:bbox.right+1]
     return (face, landmark_)
 
-
+# for 5 points landmark only
 def flip(face, landmark):
     """
         flip face
     """
+    assert(len(landmark) == 5)
     face_flipped_by_x = cv2.flip(face, 1)
     #mirror
     landmark_ = np.asarray([(1-x, y) for (x, y) in landmark])

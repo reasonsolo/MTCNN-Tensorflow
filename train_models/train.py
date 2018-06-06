@@ -12,6 +12,9 @@ from mtcnn_model import P_Net
 import random
 import numpy.random as npr
 import cv2
+
+LANDMARK_SIZE=5
+
 def train_model(base_lr, loss, data_num):
     """
     train model
@@ -101,12 +104,14 @@ def train(net_factory, prefix, end_epoch, base_dir,
     print("Total datasets is: ", num)
     print prefix
 
+    landmark_size = config.LANDMARK_SIZE
+    landmark_len = landmark_size * 2
     #PNet use this method to get data
     if net == 'PNet':
         #dataset_dir = os.path.join(base_dir,'train_%s_ALL.tfrecord_shuffle' % net)
         dataset_dir = os.path.join(base_dir,'train_%s_landmark.tfrecord_shuffle' % net)
         print dataset_dir
-        image_batch, label_batch, bbox_batch,landmark_batch = read_single_tfrecord(dataset_dir, config.BATCH_SIZE, net)
+        image_batch, label_batch, bbox_batch,landmark_batch = read_single_tfrecord(dataset_dir, config.BATCH_SIZE, net, landmark_len)
 
     #RNet use 3 tfrecords to get data
     else:
@@ -125,26 +130,25 @@ def train(net_factory, prefix, end_epoch, base_dir,
         landmark_batch_size = int(np.ceil(config.BATCH_SIZE*landmark_radio))
         assert landmark_batch_size != 0,"Batch Size Error "
         batch_sizes = [pos_batch_size,part_batch_size,neg_batch_size,landmark_batch_size]
-        image_batch, label_batch, bbox_batch,landmark_batch = read_multi_tfrecords(dataset_dirs,batch_sizes, net)
+        image_batch, label_batch, bbox_batch,landmark_batch = read_multi_tfrecords(dataset_dirs,batch_sizes, net, landmark_len)
 
     #landmark_dir
     if net == 'PNet':
         image_size = config.PNET_IMAGE_SIZE
-        radio_cls_loss = 1.0;radio_bbox_loss = 0.5;radio_landmark_loss = 0.2;
+        radio_cls_loss, radio_bbox_loss, radio_landmark_loss = 1.0, 0.5, 0.5;
     elif net == 'RNet':
         image_size = config.RNET_IMAGE_SIZE
-        radio_cls_loss = 1.0;radio_bbox_loss = 0.5;radio_landmark_loss = 0.2;
+        radio_cls_loss, radio_bbox_loss, radio_landmark_loss = 1.0, 0.5, 0.5;
     else:
-        radio_cls_loss = 1.0;radio_bbox_loss = 0.5;radio_landmark_loss = 1.0;
         image_size = config.ONET_IMAGE_SIZE
+        radio_cls_loss, radio_bbox_loss, radio_landmark_loss = 1.0, 0.5, 1.0;
 
-    landmark_size = config.LANDMARK_SIZE
 
     #define placeholder
     input_image = tf.placeholder(tf.float32, shape=[config.BATCH_SIZE, image_size, image_size, 3], name='input_image')
     label = tf.placeholder(tf.float32, shape=[config.BATCH_SIZE], name='label')
     bbox_target = tf.placeholder(tf.float32, shape=[config.BATCH_SIZE, 4], name='bbox_target')
-    landmark_target = tf.placeholder(tf.float32,shape=[config.BATCH_SIZE, landmark_size * 2],name='landmark_target')
+    landmark_target = tf.placeholder(tf.float32,shape=[config.BATCH_SIZE, landmark_len], name='landmark_target')
     #class,regression
     cls_loss_op,bbox_loss_op,landmark_loss_op,L2_loss_op,accuracy_op = net_factory(input_image, label, bbox_target,landmark_target,training=True)
     #train,update learning rate(3 loss)
@@ -181,7 +185,7 @@ def train(net_factory, prefix, end_epoch, base_dir,
                 break
             image_batch_array, label_batch_array, bbox_batch_array,landmark_batch_array = sess.run([image_batch, label_batch, bbox_batch,landmark_batch])
             #random flip
-            image_batch_array,landmark_batch_array = random_flip_images(image_batch_array,label_batch_array,landmark_batch_array)
+            # image_batch_array,landmark_batch_array = random_flip_images(image_batch_array,label_batch_array,landmark_batch_array)
             '''
             print image_batch_array.shape
             print label_batch_array.shape

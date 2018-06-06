@@ -101,8 +101,7 @@ def get_dataset(dir, data_type, net='24'):
         bbox['ynose'] = 0
         bbox['xleftmouth'] = 0
         bbox['yleftmouth'] = 0
-        bbox['xrightmouth'] = 0
-        bbox['yrightmouth'] = 0
+        bbox['xrightmouth'] = 0 bbox['yrightmouth'] = 0
         if len(info) == 6:
             bbox['xmin'] = float(info[2])
             bbox['ymin'] = float(info[3])

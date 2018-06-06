@@ -5,6 +5,7 @@ import cv2
 sys.path.append("../")
 from train_models.MTCNN_config import config
 
+print config
 
 class TestLoader:
     #imdb image_path(list)
@@ -14,7 +15,7 @@ class TestLoader:
         self.shuffle = shuffle
         self.size = len(imdb)#num of data
         #self.index = np.arange(self.size)
-        
+
         self.cur = 0
         self.data = None
         self.label = None
@@ -34,7 +35,7 @@ class TestLoader:
     #return iter object
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         return self.next()
 

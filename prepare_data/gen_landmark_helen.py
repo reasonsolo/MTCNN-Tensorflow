@@ -111,9 +111,9 @@ def generate_data(anno_dir, image_dir, net):
         # print(np_landmarks)
 
 
-    output_dir = str(size)
-    landmark_dir = os.path.join(output_dir, BASE_LANDMARK_DIR % size)
-    landmark_file = os.path.join(landmark_dir, BASE_LANDMARK_FILE % size)
+    output_dir = net
+    landmark_dir = os.path.join(output_dir, BASE_LANDMARK_DIR % net)
+    landmark_file = os.path.join(output_dir, BASE_LANDMARK_FILE % net)
     img_dir = os.path.join(output_dir, BASE_IMG_DIR % net)
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)

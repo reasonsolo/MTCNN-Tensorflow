@@ -2,7 +2,10 @@
 import tensorflow as tf
 from tensorflow.contrib import slim
 import numpy as np
+from MTCNN_config import config as mtcnn_config
 num_keep_radio = 0.7
+LANDMARK_LEN=mtcnn_config.LANDMARK_SIZE*2
+
 #define prelu
 def prelu(inputs):
     alphas = tf.get_variable("alphas", shape=inputs.get_shape()[-1], dtype=tf.float32, initializer=tf.constant_initializer(0.25))
@@ -137,7 +140,7 @@ def P_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
         bbox_pred = slim.conv2d(net,num_outputs=4,kernel_size=[1,1],stride=1,scope='conv4_2',activation_fn=None)
         print bbox_pred.get_shape()
         #batch*H*W*10
-        landmark_pred = slim.conv2d(net,num_outputs=10,kernel_size=[1,1],stride=1,scope='conv4_3',activation_fn=None)
+        landmark_pred = slim.conv2d(net,num_outputs=LADNMARK_LEN,kernel_size=[1,1],stride=1,scope='conv4_3',activation_fn=None)
         print landmark_pred.get_shape()
         #cls_prob_original = conv4_1
         #bbox_pred_original = bbox_pred
@@ -192,7 +195,7 @@ def R_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
         bbox_pred = slim.fully_connected(fc1,num_outputs=4,scope="bbox_fc",activation_fn=None)
         print bbox_pred.get_shape()
         #batch*10
-        landmark_pred = slim.fully_connected(fc1,num_outputs=10,scope="landmark_fc",activation_fn=None)
+        landmark_pred = slim.fully_connected(fc1,num_outputs=LANDMARK_LEN,scope="landmark_fc",activation_fn=None)
         print landmark_pred.get_shape()
         #train
         if training:
@@ -238,7 +241,7 @@ def O_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
         bbox_pred = slim.fully_connected(fc1,num_outputs=4,scope="bbox_fc",activation_fn=None)
         print bbox_pred.get_shape()
         #batch*10
-        landmark_pred = slim.fully_connected(fc1,num_outputs=10,scope="landmark_fc",activation_fn=None)
+        landmark_pred = slim.fully_connected(fc1,num_outputs=LANDMARK_LEN,scope="landmark_fc",activation_fn=None)
         print landmark_pred.get_shape()
         #train
         if training:

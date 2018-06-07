@@ -62,6 +62,7 @@ def _convert_to_example(image_example, image_buffer, colorspace=b'RGB', channels
         'image/image_bbox/ymax': _float_feature(ymax),
     }))
     return example
+
 def _convert_to_example_simple(image_example, image_buffer):
     """
     covert to tfrecord file

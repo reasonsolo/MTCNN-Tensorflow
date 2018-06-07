@@ -5,6 +5,7 @@ import cv2
 import os
 import numpy.random as npr
 from utils import IoU
+sys.path.append("../")
 from train_models.MTCNN_config import config
 
 net='PNet'
@@ -143,7 +144,7 @@ for annotation in annotations:
             iou = IoU(crop_box, box_)
             if iou >= 0.65:
                 save_file = os.path.join(pos_save_dir, "%s.jpg"%p_idx)
-                pos_file.write("%s/positive/%s.jpg"% (p_idx) + ' 1 %.2f %.2f %.2f %.2f\n'%(offset_x1, offset_y1, offset_x2, offset_y2))
+                pos_file.write("%s/positive/%s.jpg"% (net, p_idx) + ' 1 %.2f %.2f %.2f %.2f\n'%(offset_x1, offset_y1, offset_x2, offset_y2))
                 cv2.imwrite(save_file, resized_im)
                 p_idx += 1
             elif iou >= 0.4:

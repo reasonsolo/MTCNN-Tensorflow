@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.random as npr
 import os
+import sys
 
 data_dir = '.'
 #anno_file = os.path.join(data_dir, "anno.txt")
@@ -25,7 +26,8 @@ if __name__ == '__main__':
         os.makedirs(dir_path)
     if not os.path.exists(os.path.join(dir_path, "%s" %(net))):
         os.makedirs(os.path.join(dir_path, "%s" %(net)))
-    with open(os.path.join(dir_path, "%s" %(net),"train_%s_landmark.txt" % (net)), "w") as f:
+    print(os.path.join(dir_path, "%s" %(net),"train_%s_landmark.txt" % (net)))
+    with open(os.path.join(dir_path, "%s" % (net), "train_%s_landmark.txt" % (net)), "w") as f:
         nums = [len(neg), len(pos), len(part)]
         ratio = [3, 1, 1]
         #base_num = min(nums)

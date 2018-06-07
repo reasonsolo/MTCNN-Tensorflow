@@ -107,7 +107,7 @@ def GenerateData(ftxt, output,net,argument=False):
                 if nx2 > img_w or ny2 > img_h:
                     continue
                 crop_box = np.array([nx1,ny1,nx2,ny2])
-                cropped_im = img[ny1:ny2+1,nx1:nx2+1,:]
+                cropped_im = img[ny1:ny2+1, nx1:nx2+1, :]
                 resized_im = cv2.resize(cropped_im, (size, size))
                 #cal iou
                 iou = IoU(crop_box, np.expand_dims(gt_box,0))

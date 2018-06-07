@@ -4,11 +4,14 @@ import tensorflow as tf
 import numpy as np
 import cv2
 import os
+import sys
+sys.path.append('../')
 from train_models.MTCNN_config import config
+landmark_len = config.LANDMARK_SIZE * 2
 
 #just for RNet and ONet, since I change the method of making tfrecord
 #as for PNet
-def read_single_tfrecord(tfrecord_file, batch_size, net, landmark_len):
+def read_single_tfrecord(tfrecord_file, batch_size, net):
     # generate a input queue
     # each epoch shuffle
     filename_queue = tf.train.string_input_producer([tfrecord_file],shuffle=True)
@@ -46,7 +49,7 @@ def read_single_tfrecord(tfrecord_file, batch_size, net, landmark_len):
     )
     label = tf.reshape(label, [batch_size])
     roi = tf.reshape(roi,[batch_size,4])
-    landmark = tf.reshape(landmark,[batch_size,landmark_size])
+    landmark = tf.reshape(landmark,[batch_size, landmark_len])
     return image, label, roi,landmark
 
 def read_multi_tfrecords(tfrecord_files, batch_sizes, net):
@@ -77,7 +80,6 @@ def read():
     dataset_dir = "imglists/PNet"
     landmark_dir = os.path.join(dataset_dir,'train_PNet_ALL_few.tfrecord_shuffle')
     images, labels, rois,landmarks  = read_single_tfrecord(landmark_dir, BATCH_SIZE, net)
-    landmark_len = config.LANDMARK_SIZE * 2
 
     '''
     pos_dir = os.path.join(dataset_dir,'pos.tfrecord_shuffle')

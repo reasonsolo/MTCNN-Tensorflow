@@ -1,11 +1,16 @@
 from load_helen import  load_annotation
 from BBox_utils import BBox, IoU
 from Landmark_utils import rotate
+import sys
+sys.path.append('../')
+from train_models.MTCNN_config import config
 import cv2
 import os
-import sys
 import random
 import numpy as np
+
+
+LANDMARK_LEN = config.LANDMARK_SIZE * 2
 
 NETS_IMG_SIZE = {
     'PNet': 12,
@@ -18,9 +23,9 @@ RANDOM_SHIFT_TIMES = 20
 IOU_POS = 0.65
 IOU_NEG = 0.3
 
-BASE_LANDMARK_DIR = 'train_%d_landmark_aug'
-BASE_LANDMARK_FILE = 'landmark_%d_aug.txt'
-BASE_IMG_DIR = 'train_%s_landmark_aug'
+BASE_LANDMARK_DIR = 'train_%s_landmark'
+BASE_LANDMARK_FILE = 'landmark_%s.txt'
+BASE_IMG_DIR = 'train_%s_landmark'
 
 def generate_data(anno_dir, image_dir, net):
     size = NETS_IMG_SIZE[net]
@@ -29,7 +34,11 @@ def generate_data(anno_dir, image_dir, net):
     f_landmarks = []
     img_count= 0
     for image_name, box_corner, landmarks_gt in load_annotation(anno_dir):
+        if len(landmarks_gt) != config.LANDMARK_SIZE:
+            print('invalid landmakr size %d file %s' % (len(landmarks_gt), image_name))
+            continue
         image_path = os.path.join(image_dir, "%s.jpg" % image_name)
+        print('transform image %s' % image_path)
         img = cv2.imread(image_path)
         if img is None:
             continue
@@ -65,19 +74,20 @@ def generate_data(anno_dir, image_dir, net):
 
         for i in range(RANDOM_SHIFT_TIMES):
             bbox_size = np.random.randint(int(min(gt_w, gt_h) * 0.8),
-                                          int(1.25 * max(gt_w, gt_h)))
+                                          np.ceil(1.25 * max(gt_w, gt_h)))
             delta_x = np.random.randint(-gt_w * 0.2, gt_w * 0.2)
             delta_y = np.random.randint(-gt_h * 0.2, gt_h * 0.2)
 
-            nx1 = max(x1 + gt_w / 2 - bbox_size / 2 + delta_x, 0)
-            ny1 = max(y1 + gt_h / 2 - bbox_size / 2 + delta_y, 0)
+            nx1 = int(max(x1 + gt_w / 2 - bbox_size / 2 + delta_x, 0))
+            ny1 = int(max(y1 + gt_h / 2 - bbox_size / 2 + delta_y, 0))
 
             nx2 = nx1 + bbox_size
             ny2 = ny1 + bbox_size
             if nx2 > img_w or ny2 > img_h:
                 continue
             crop_box = np.array([nx1, ny1, nx2, ny2])
-            cropped_img = img[ny1:ny2+1, nx1:nx2+1,:]
+            print([nx1, ny1, nx2, ny2])
+            cropped_img = img[ny1:ny2+1, nx1:nx2+1, :]
             resized_img = cv2.resize(cropped_img, (size, size))
             #cal iou
             iou = IoU(crop_box, np.expand_dims(gt_box,0))
@@ -106,10 +116,9 @@ def generate_data(anno_dir, image_dir, net):
                 f_imgs.append(rotated_cropped_img)
                 f_landmarks.append(rotated_landmark)
 
-        np_imgs, np_landmarks = np.asarray(f_imgs), np.asarray(f_landmarks)
-        print('np_imgs shape %s, np_landmarks shape %s' % (np_imgs.shape, np_landmarks.shape))
-        # print(np_landmarks)
-
+    np_imgs, np_landmarks = np.asarray(f_imgs), np.asarray(f_landmarks)
+    print('np_imgs shape %s, np_landmarks shape %s' % (np_imgs.shape, np_landmarks.shape))
+    # print(np_landmarks)
 
     output_dir = net
     landmark_dir = os.path.join(output_dir, BASE_LANDMARK_DIR % net)

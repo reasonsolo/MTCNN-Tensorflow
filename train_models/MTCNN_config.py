@@ -17,5 +17,5 @@ config.PNET_IMAGE_SIZE = 12
 config.RNET_IMAGE_SIZE = 24
 config.ONET_IMAGE_SIZE = 48
 
-config.LANDMARK_SIZE = 5
-# config.LANDMARK_SIZE =197
+#config.LANDMARK_SIZE = 5
+config.LANDMARK_SIZE = 194

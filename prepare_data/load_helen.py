@@ -13,13 +13,14 @@ def load_annotation(filedir):
     for anno_file in os.listdir(filedir):
         file_path =  os.path.join(filedir, anno_file)
         img_name, landmarks = read_annotation(file_path)
+        print('anno path %s img file %s' % (file_path, img_name))
         max_x, max_y = 0, 0
         min_x, min_y = np.inf, np.inf
         for x, y in landmarks:
-            max_x = max(x, max_x)
-            max_y = max(y, max_y)
-            min_x = min(x, min_x)
-            min_y = min(y, min_y)
-        yield img_name, map(int, [min_x, min_y, max_x, max_y]), landmarks
+            max_x = max(int(x), max_x)
+            max_y = max(int(y), max_y)
+            min_x = min(int(x), min_x)
+            min_y = min(int(y), min_y)
+        yield img_name, [min_x, min_y, max_x, max_y], landmarks
 
 

@@ -140,7 +140,7 @@ def P_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
         bbox_pred = slim.conv2d(net,num_outputs=4,kernel_size=[1,1],stride=1,scope='conv4_2',activation_fn=None)
         print bbox_pred.get_shape()
         #batch*H*W*10
-        landmark_pred = slim.conv2d(net,num_outputs=LADNMARK_LEN,kernel_size=[1,1],stride=1,scope='conv4_3',activation_fn=None)
+        landmark_pred = slim.conv2d(net,num_outputs=LANDMARK_LEN,kernel_size=[1,1],stride=1,scope='conv4_3',activation_fn=None)
         print landmark_pred.get_shape()
         #cls_prob_original = conv4_1
         #bbox_pred_original = bbox_pred

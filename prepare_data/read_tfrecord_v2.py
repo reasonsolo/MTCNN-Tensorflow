@@ -49,8 +49,8 @@ def read_single_tfrecord(tfrecord_file, batch_size, net):
     )
     label = tf.reshape(label, [batch_size])
     roi = tf.reshape(roi,[batch_size,4])
-    landmark = tf.reshape(landmark,[batch_size, landmark_len])
-    return image, label, roi,landmark
+    landmark = tf.reshape(landmark, [batch_size, landmark_len])
+    return image, label, roi, landmark
 
 def read_multi_tfrecords(tfrecord_files, batch_sizes, net):
     pos_dir,part_dir,neg_dir,landmark_dir = tfrecord_files

@@ -41,8 +41,9 @@ def cls_ohem(cls_prob, label):
     keep_num = tf.cast(num_valid*num_keep_radio,dtype=tf.int32)
     #set 0 to invalid sample
     loss = loss * valid_inds
-    loss,_ = tf.nn.top_k(loss, k=keep_num)
+    loss, _ = tf.nn.top_k(loss, k=keep_num)
     return tf.reduce_mean(loss)
+
 def bbox_ohem_smooth_L1_loss(bbox_pred,bbox_target,label):
     sigma = tf.constant(1.0)
     threshold = 1.0/(sigma**2)
@@ -141,8 +142,8 @@ def P_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
         print bbox_pred.get_shape()
         #batch*H*W*10
         landmark_pred = slim.conv2d(net,num_outputs=LANDMARK_LEN,kernel_size=[1,1],stride=1,scope='conv4_3',activation_fn=None)
-        print landmark_pred.get_shape()
         #cls_prob_original = conv4_1
+        print landmark_pred.get_shape()
         #bbox_pred_original = bbox_pred
         if training:
             #batch*2

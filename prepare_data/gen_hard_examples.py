@@ -17,6 +17,7 @@ from utils import *
 from data_utils import *
 #net : 24(RNet)/48(ONet)
 #data: dict()
+
 def save_hard_example(net, data,save_path):
     # load ground truth from annotation file
     # format of each line: image/path [x1,y1,x2,y2] for each gt_box in this image
@@ -186,7 +187,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Test mtcnn',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--test_mode', dest='test_mode', help='test net type, can be pnet, rnet or onet',
-                        default='RNet', type=str)
+                        default='PNet', type=str)
     parser.add_argument('--prefix', dest='prefix', help='prefix of model name', nargs="+",
                         default=['../data/MTCNN_model/PNet_landmark/PNet', '../data/MTCNN_model/RNet_landmark/RNet', '../data/MTCNN_model/ONet/ONet'],
                         type=str)
@@ -218,7 +219,7 @@ if __name__ == '__main__':
         image_size = 48
 
     base_dir = '../prepare_data/WIDER_train'
-    data_dir = '%s' % str(image_size)
+    data_dir = '%s' % net
 
     neg_dir = get_path(data_dir, 'negative')
     pos_dir = get_path(data_dir, 'positive')

@@ -22,7 +22,7 @@ if __name__ == '__main__':
     model_name = 'MTCNN'
     model_path = '../data/%s_model/RNet_landmark/RNet' % model_name
     prefix = model_path
-    end_epoch = 22
+    end_epoch = 30
     display = 1000
-    lr = 0.01
+    lr = 0.00000
     train_RNet(base_dir, prefix, end_epoch, display, lr)

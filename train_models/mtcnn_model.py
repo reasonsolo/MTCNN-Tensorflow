@@ -153,7 +153,7 @@ def P_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
             bbox_pred = tf.squeeze(bbox_pred,[1,2],name='bbox_pred')
             bbox_loss = bbox_ohem(bbox_pred,bbox_target,label)
             #batch*10
-            landmark_pred = tf.squeeze(landmark_pred,[1,2],name="landmark_pred")
+            landmark_pred = tf.squeeze(landmark_pred, [1,2], name="landmark_pred")
             landmark_loss = landmark_ohem(landmark_pred,landmark_target,label)
 
             accuracy = cal_accuracy(cls_prob,label)

@@ -13,7 +13,6 @@ import random
 import numpy.random as npr
 import cv2
 
-LANDMARK_SIZE=5
 
 def train_model(base_lr, loss, data_num):
     """
@@ -130,7 +129,7 @@ def train(net_factory, prefix, end_epoch, base_dir,
         landmark_batch_size = int(np.ceil(config.BATCH_SIZE*landmark_radio))
         assert landmark_batch_size != 0,"Batch Size Error "
         batch_sizes = [pos_batch_size,part_batch_size,neg_batch_size,landmark_batch_size]
-        image_batch, label_batch, bbox_batch,landmark_batch = read_multi_tfrecords(dataset_dirs,batch_sizes, net, landmark_len)
+        image_batch, label_batch, bbox_batch,landmark_batch = read_multi_tfrecords(dataset_dirs,batch_sizes, net)
 
     #landmark_dir
     if net == 'PNet':

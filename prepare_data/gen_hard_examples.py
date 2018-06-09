@@ -18,7 +18,7 @@ from data_utils import *
 #net : 24(RNet)/48(ONet)
 #data: dict()
 
-def save_hard_example(net, data,save_path):
+def save_hard_example(net, data, save_path):
     # load ground truth from annotation file
     # format of each line: image/path [x1,y1,x2,y2] for each gt_box in this image
 
@@ -31,6 +31,7 @@ def save_hard_example(net, data,save_path):
 
     # save files
     neg_label_file = "%s/neg_%s.txt" % (net, net)
+    print('neg file %s' % neg_label_file)
     neg_file = open(neg_label_file, 'w')
 
     pos_label_file = "%s/pos_%s.txt" % (net, net)
@@ -66,6 +67,8 @@ def save_hard_example(net, data,save_path):
         dets = convert_to_square(dets)
         dets[:, 0:4] = np.round(dets[:, 0:4])
         neg_num = 0
+        # print ("dets %d imgdone %d" % (len(dets), image_done))
+        ignored = 0
         for box in dets:
             x_left, y_top, x_right, y_bottom, _ = box.astype(int)
             width = x_right - x_left + 1
@@ -73,6 +76,7 @@ def save_hard_example(net, data,save_path):
 
             # ignore box that is too small or beyond image border
             if width < 20 or x_left < 0 or y_top < 0 or x_right > img.shape[1] - 1 or y_bottom > img.shape[0] - 1:
+                ignored += 1
                 continue
 
             # compute intersection over union(IoU) between current box and all gt boxes
@@ -86,8 +90,8 @@ def save_hard_example(net, data,save_path):
             if np.max(Iou) < 0.3 and neg_num < 60:
                 #save the examples
                 save_file = get_path(neg_dir, "%s.jpg" % n_idx)
-                # print(save_file)
                 neg_file.write(save_file + ' 0\n')
+                #print('neg %s' % save_file)
                 cv2.imwrite(save_file, resized_im)
                 n_idx += 1
                 neg_num += 1
@@ -108,6 +112,7 @@ def save_hard_example(net, data,save_path):
                     save_file = get_path(pos_dir, "%s.jpg" % p_idx)
                     pos_file.write(save_file + ' 1 %.2f %.2f %.2f %.2f\n' % (
                         offset_x1, offset_y1, offset_x2, offset_y2))
+                    # print('pos ' + save_file + ' 1 %.2f %.2f %.2f %.2f\n' % ( offset_x1, offset_y1, offset_x2, offset_y2))
                     cv2.imwrite(save_file, resized_im)
                     p_idx += 1
 
@@ -115,17 +120,18 @@ def save_hard_example(net, data,save_path):
                     save_file = os.path.join(part_dir, "%s.jpg" % d_idx)
                     part_file.write(save_file + ' -1 %.2f %.2f %.2f %.2f\n' % (
                         offset_x1, offset_y1, offset_x2, offset_y2))
+                    # print('part ' + save_file + ' -1 %.2f %.2f %.2f %.2f\n' % ( offset_x1, offset_y1, offset_x2, offset_y2))
                     cv2.imwrite(save_file, resized_im)
                     d_idx += 1
+        # print('img %d ignored %d' % (image_done, ignored))
     neg_file.close()
     part_file.close()
     pos_file.close()
 
 
-def t_net(prefix, epoch,
-             batch_size, test_mode="PNet",
-             thresh=[0.6, 0.6, 0.7], min_face_size=25,
-             stride=2, slide_window=False, shuffle=False, vis=False):
+def t_net(prefix, epoch, batch_size, test_mode="PNet",
+          thresh=[0.6, 0.6, 0.7], min_face_size=25,
+          stride=2, slide_window=False, shuffle=False, vis=False, skip_detect=False):
     detectors = [None, None, None]
     print("Test model: ", test_mode)
     #PNet-echo
@@ -154,17 +160,7 @@ def t_net(prefix, epoch,
     #anno_file
     filename = './wider_face_train_bbx_gt.txt'
     #read annatation(type:dict)
-    data = read_annotation(basedir,filename)
-    mtcnn_detector = MtcnnDetector(detectors=detectors, min_face_size=min_face_size,
-                                   stride=stride, threshold=thresh, slide_window=slide_window)
-    print("==================================")
-    # 注意是在“test”模式下
-    # imdb = IMDB("wider", image_set, root_path, dataset_path, 'test')
-    # gt_imdb = imdb.gt_imdb()
-    test_data = TestLoader(data['images'])
-    #list
-    detections,_ = mtcnn_detector.detect_face(test_data)
-
+    data = read_annotation(basedir, filename)
     save_net = 'RNet'
     if test_mode == "PNet":
         save_net = "RNet"
@@ -172,15 +168,25 @@ def t_net(prefix, epoch,
         save_net = "ONet"
     #save detect result
     save_path = os.path.join(data_dir, save_net)
-    print save_path
+    save_file = os.path.join(save_path, "detections.pkl")
+    print ('save path %s' % save_path)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
+    if not skip_detect:
+        mtcnn_detector = MtcnnDetector(detectors=detectors, min_face_size=min_face_size,
+                                       stride=stride, threshold=thresh, slide_window=slide_window)
+        print("==================================")
+        # 注意是在“test”模式下
+        # imdb = IMDB("wider", image_set, root_path, dataset_path, 'test')
+        # gt_imdb = imdb.gt_imdb()
+        test_data = TestLoader(data['images'])
+        #list
+        detections,_ = mtcnn_detector.detect_face(test_data)
 
-    save_file = os.path.join(save_path, "detections.pkl")
-    with open(save_file, 'wb') as f:
-        pickle.dump(detections, f,1)
+        with open(save_file, 'wb') as f:
+            pickle.dump(detections, f, 1)
     print("%s测试完成开始OHEM" % image_size)
-    save_hard_example(test_mode, data, save_path)
+    save_hard_example(save_net, data, save_path)
 
 
 def parse_args():
@@ -242,4 +248,5 @@ if __name__ == '__main__':
           args.stride,#stride
           args.slide_window,
           args.shuffle,
-          vis=False)
+          vis=False,
+          skip_detect = True)

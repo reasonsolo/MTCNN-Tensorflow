@@ -81,6 +81,7 @@ def gen_rnet_tfrecord(dataset_dir, output_dir, net='RNet'):
         file_name = BASE_IMGLIST_NAME % net
         dataset_path = os.path.join(dataset_dir, file_name)
         tfrecord_path = '%s/%s_landmark.tfrecord' % (output_dir, data_type)
+        print('dataset %s tfrecord %s' % (dataset_path, tfrecord_path))
         gen_tfrecord_file(dataset_path, tfrecord_path)
 
 def gen_onet_tfrecord(dataset_dir, output_dir, net='ONet'):

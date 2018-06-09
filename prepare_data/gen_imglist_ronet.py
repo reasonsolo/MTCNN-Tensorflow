@@ -1,5 +1,6 @@
 import os
 import sys
+import numpy as np
 
 data_dir = '.'
 #anno_file = os.path.join(data_dir, "anno.txt")

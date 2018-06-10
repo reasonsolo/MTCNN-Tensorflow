@@ -34,7 +34,10 @@ def line_to_example(i, line, dataset_path):
         bbox['xmax'] = float(segs[4])
         bbox['ymax'] = float(segs[5])
     elif len(segs) == LANDMARK_LEN + 2:
-        data_example['landmark'] = [float(lm) for lm in segs[2:]]
+        data_example['landmark'] = [float(lm[0:5]) for lm in segs[2:]]
+        for lm in data_example['landmark']:
+            if lm < 0 or lm > 1:
+                print("invalid landmark %f" % lm)
     elif len(segs) == 2:
         # negative record
         pass

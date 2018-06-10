@@ -1,4 +1,4 @@
-from load_helen import  load_annotation
+from load_dataset import  load_helen_annotation, load_muct_annotation
 from BBox_utils import BBox, IoU
 from Landmark_utils import rotate
 import sys
@@ -27,7 +27,7 @@ BASE_LANDMARK_DIR = 'train_%s_landmark'
 BASE_LANDMARK_FILE = 'landmark_%s.txt'
 BASE_IMG_DIR = 'train_%s_landmark'
 
-def generate_data(anno_dir, image_dir, net):
+def generate_data(anno_dir, image_dir, net, load_annotation):
     size = NETS_IMG_SIZE[net]
 
     f_imgs = []
@@ -38,13 +38,11 @@ def generate_data(anno_dir, image_dir, net):
             print('invalid landmakr size %d file %s' % (len(landmarks_gt), image_name))
             continue
         image_path = os.path.join(image_dir, "%s.jpg" % image_name)
-        print('transform image %s' % image_path)
         img = cv2.imread(image_path)
         if img is None:
             continue
-        print('landmarks len %d' % len(landmarks_gt))
+        # print('transform image %s' % image_path + 'landmarks len %d' % len(landmarks_gt))
         img_h, img_w, img_c = img.shape
-        print(box_corner)
         bbox = BBox(box_corner)
         gt_box = np.array([bbox.left, bbox.top, bbox.right, bbox.bottom])
         face = img[bbox.top:bbox.bottom+1, bbox.left:bbox.right+1]
@@ -64,7 +62,7 @@ def generate_data(anno_dir, image_dir, net):
         f_landmarks.append(f_landmark.reshape(np.prod(f_landmark.shape)))
         img_count += 1
         if img_count % 100 == 0:
-            print(img_count, " images done")
+            print("%d images done" % img_count)
         x1, y1, x2, y2 = gt_box
         gt_w = x2 - x1 + 1
         gt_h = y2 - y1 + 1
@@ -86,7 +84,7 @@ def generate_data(anno_dir, image_dir, net):
             if nx2 > img_w or ny2 > img_h:
                 continue
             crop_box = np.array([nx1, ny1, nx2, ny2])
-            print([nx1, ny1, nx2, ny2])
+            # print([nx1, ny1, nx2, ny2])
             cropped_img = img[ny1:ny2+1, nx1:nx2+1, :]
             resized_img = cv2.resize(cropped_img, (size, size))
             #cal iou
@@ -103,15 +101,19 @@ def generate_data(anno_dir, image_dir, net):
                 f_imgs.append(resized_img)
                 bbox = BBox([nx1, ny1, nx2, ny2])
 
-                print('shifted landmark shape %s' % str(shifted_landmark.shape))
+                #print('shifted landmark shape %s' % str(shifted_landmark.shape))
 
                 # rotate image and landmark
-                rotate_alpha = random.choice([-1, 1]) * np.random.randint(5, 20)
+                rotate_alpha = random.choice([-1, 1]) * np.random.randint(5, 10)
                 rotated_face, rotated_landmark = rotate(img, bbox,
                                                         bbox.reprojectLandmark(shifted_landmark),
                                                         rotate_alpha)
                 rotated_landmark = bbox.projectLandmark(rotated_landmark)
-                #print('rotated_landmark %s' % str(rotated_landmark))
+                if np.sum(np.where(rotated_landmark < 0, 1, 0)) > 0:
+                    continue
+                if np.sum(np.where(rotated_landmark > 1, 1, 0)) > 0:
+                    continue
+                # print('rotated_landmark %s' % str(rotated_landmark))
                 rotated_cropped_img = cv2.resize(rotated_face, (size, size))
                 f_imgs.append(rotated_cropped_img)
                 f_landmarks.append(rotated_landmark)
@@ -130,7 +132,7 @@ def generate_data(anno_dir, image_dir, net):
         os.mkdir(landmark_dir)
     if not os.path.exists(img_dir):
         os.mkdir(img_dir)
-
+    print('writing to landmark %s' % landmark_file)
     with open(landmark_file, 'w') as f:
         img_count = 0
         for i, img in enumerate(np_imgs):
@@ -144,8 +146,13 @@ def generate_data(anno_dir, image_dir, net):
             flattened_landmark = map(str, list(np_landmarks[i].reshape(np.prod(np_landmarks[i].shape))))
             f.write(" ".join([img_file_path, "-2"] + flattened_landmark))
             f.write("\n")
+        print('total img %d' % img_count)
 
 if __name__ == '__main__':
     net = sys.argv[1]
-    generate_data('helen/annotation','helen/image', net)
+    dataset = sys.argv[2]
+    if dataset == 'helen':
+        generate_data('helen/annotation','helen/image', net, load_helen_annotation)
+    elif dataset == 'muct':
+        generate_data('muct/muct76-opencv.csv', 'muct/image', net, load_muct_annotation)
 

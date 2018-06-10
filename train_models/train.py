@@ -185,7 +185,6 @@ def train(net_factory, prefix, end_epoch, base_dir,
             image_batch_array, label_batch_array, bbox_batch_array,landmark_batch_array = sess.run([image_batch, label_batch, bbox_batch,landmark_batch])
             #random flip
             # image_batch_array,landmark_batch_array = random_flip_images(image_batch_array,label_batch_array,landmark_batch_array)
-            '''
             print image_batch_array.shape
             print label_batch_array.shape
             print bbox_batch_array.shape
@@ -193,7 +192,6 @@ def train(net_factory, prefix, end_epoch, base_dir,
             print label_batch_array[0]
             print bbox_batch_array[0]
             print landmark_batch_array[0]
-            '''
             _,_,summary = sess.run([train_op, lr_op ,summary_op], feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array,landmark_target:landmark_batch_array})
 
             if (step+1) % display == 0:

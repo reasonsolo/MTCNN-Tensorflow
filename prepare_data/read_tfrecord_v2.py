@@ -7,7 +7,7 @@ import os
 import sys
 sys.path.append('../')
 from train_models.MTCNN_config import config
-landmark_len = config.LANDMARK_SIZE * 2
+LANDMARK_LEN = config.LANDMARK_SIZE * 2
 
 #just for RNet and ONet, since I change the method of making tfrecord
 #as for PNet
@@ -24,7 +24,7 @@ def read_single_tfrecord(tfrecord_file, batch_size, net):
             'image/encoded': tf.FixedLenFeature([], tf.string),#one image  one record
             'image/label': tf.FixedLenFeature([], tf.int64),
             'image/roi': tf.FixedLenFeature([4], tf.float32),
-            'image/landmark': tf.FixedLenFeature([landmark_len],tf.float32)
+            'image/landmark': tf.FixedLenFeature([LANDMARK_LEN],tf.float32)
         }
     )
     if net == 'PNet':
@@ -49,7 +49,7 @@ def read_single_tfrecord(tfrecord_file, batch_size, net):
     )
     label = tf.reshape(label, [batch_size])
     roi = tf.reshape(roi,[batch_size,4])
-    landmark = tf.reshape(landmark, [batch_size, landmark_len])
+    landmark = tf.reshape(landmark, [batch_size, LANDMARK_LEN])
     return image, label, roi, landmark
 
 def read_multi_tfrecords(tfrecord_files, batch_sizes, net):
@@ -77,8 +77,8 @@ def read_multi_tfrecords(tfrecord_files, batch_sizes, net):
 def read():
     BATCH_SIZE = 64
     net = 'PNet'
-    dataset_dir = "imglists/PNet"
-    landmark_dir = os.path.join(dataset_dir,'train_PNet_ALL_few.tfrecord_shuffle')
+    dataset_dir = "imglists/RNet"
+    landmark_dir = os.path.join(dataset_dir,'landmark_landmark.tfrecord_shuffle')
     images, labels, rois,landmarks  = read_single_tfrecord(landmark_dir, BATCH_SIZE, net)
 
     '''

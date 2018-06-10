@@ -18,4 +18,5 @@ config.RNET_IMAGE_SIZE = 24
 config.ONET_IMAGE_SIZE = 48
 
 #config.LANDMARK_SIZE = 5
-config.LANDMARK_SIZE = 194
+config.LANDMARK_SIZE = 194  # helen
+#config.LANDMARK_SIZE = 76  # muct

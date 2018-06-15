@@ -31,7 +31,6 @@ def save_hard_example(net, data, save_path):
 
     # save files
     neg_label_file = "%s/neg_%s.txt" % (net, net)
-    print('neg file %s' % neg_label_file)
     neg_file = open(neg_label_file, 'w')
 
     pos_label_file = "%s/pos_%s.txt" % (net, net)
@@ -133,10 +132,9 @@ def t_net(prefix, epoch, batch_size, test_mode="PNet",
           thresh=[0.6, 0.6, 0.7], min_face_size=25,
           stride=2, slide_window=False, shuffle=False, vis=False, skip_detect=False):
     detectors = [None, None, None]
-    print("Test model: ", test_mode)
     #PNet-echo
     model_path = ['%s-%s' % (x, y) for x, y in zip(prefix, epoch)]
-    print(model_path[0])
+    print("Test model %s, path %s" % (test_mode, model_path[0]))
     # load pnet model
     if slide_window:
         PNet = Detector(P_Net, 12, batch_size[0], model_path[0])
@@ -172,19 +170,18 @@ def t_net(prefix, epoch, batch_size, test_mode="PNet",
     print ('save path %s' % save_path)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
-    if not skip_detect:
-        mtcnn_detector = MtcnnDetector(detectors=detectors, min_face_size=min_face_size,
-                                       stride=stride, threshold=thresh, slide_window=slide_window)
-        print("==================================")
-        # 注意是在“test”模式下
-        # imdb = IMDB("wider", image_set, root_path, dataset_path, 'test')
-        # gt_imdb = imdb.gt_imdb()
-        test_data = TestLoader(data['images'])
-        #list
-        detections,_ = mtcnn_detector.detect_face(test_data)
+    mtcnn_detector = MtcnnDetector(detectors=detectors, min_face_size=min_face_size,
+                                   stride=stride, threshold=thresh, slide_window=slide_window)
+    print("==================================")
+    # 注意是在“test”模式下
+    # imdb = IMDB("wider", image_set, root_path, dataset_path, 'test')
+    # gt_imdb = imdb.gt_imdb()
+    test_data = TestLoader(data['images'])
+    #list
+    detections,_ = mtcnn_detector.detect_face(test_data)
 
-        with open(save_file, 'wb') as f:
-            pickle.dump(detections, f, 1)
+    with open(save_file, 'wb') as f:
+        pickle.dump(detections, f, 1)
     print("%s测试完成开始OHEM" % image_size)
     save_hard_example(save_net, data, save_path)
 
@@ -198,7 +195,7 @@ def parse_args():
                         default=['../data/MTCNN_model/PNet_landmark/PNet', '../data/MTCNN_model/RNet_landmark/RNet', '../data/MTCNN_model/ONet/ONet'],
                         type=str)
     parser.add_argument('--epoch', dest='epoch', help='epoch number of model to load', nargs="+",
-                        default=[18, 14, 22], type=int)
+                        default=[20, 20, 22], type=int)
     parser.add_argument('--batch_size', dest='batch_size', help='list of batch size used in prediction', nargs="+",
                         default=[2048, 256, 16], type=int)
     parser.add_argument('--thresh', dest='thresh', help='list of thresh for pnet, rnet, onet', nargs="+",
@@ -218,10 +215,12 @@ def parse_args():
 
 if __name__ == '__main__':
 
-    net = 'RNet' # change this
-    if net == "RNet":
+    args = parse_args()
+    if args.test_mode == 'PNet':
+        net = 'RNet' # change this
         image_size = 24
-    if net == "ONet":
+    elif args.test_mode == "RNet":
+        net = "ONet"
         image_size = 48
 
     base_dir = '../prepare_data/WIDER_train'
@@ -235,7 +234,6 @@ if __name__ == '__main__':
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
-    args = parse_args()
 
     print 'Called with argument:'
     print args

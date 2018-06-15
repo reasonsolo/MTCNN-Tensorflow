@@ -87,7 +87,7 @@ def bbox_ohem(bbox_pred,bbox_target,label):
     square_error = square_error*valid_inds
     _, k_index = tf.nn.top_k(square_error, k=keep_num)
     square_error = tf.gather(square_error, k_index)
-    return tf.reduce_mean(square_error)
+    return tf.cond(num_valid > tf.constant(0.0), lambda: tf.reduce_mean(square_error), lambda: tf.constant(100.0))  # edit by bin.wen, only for debugging
 
 def landmark_ohem(landmark_pred,landmark_target,label):
     #keep label =-2  then do landmark detection
@@ -102,7 +102,7 @@ def landmark_ohem(landmark_pred,landmark_target,label):
     square_error = square_error*valid_inds
     _, k_index = tf.nn.top_k(square_error, k=keep_num)
     square_error = tf.gather(square_error, k_index)
-    return tf.reduce_mean(square_error)
+    return tf.cond(num_valid > tf.constant(0.0), lambda:tf.reduce_mean(square_error), lambda:tf.constant(100.0))  # edit by bin.wen, only for debugging
 
 def cal_accuracy(cls_prob,label):
     pred = tf.argmax(cls_prob,axis=1)
@@ -128,9 +128,9 @@ def P_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
         print net.get_shape()
         net = slim.max_pool2d(net, kernel_size=[2,2], stride=2, scope='pool1', padding='SAME')
         print net.get_shape()
-        net = slim.conv2d(net,num_outputs=16,kernel_size=[3,3],stride=1,scope='conv2')
+        net = slim.conv2d(net,num_outputs=32,kernel_size=[3,3],stride=1,scope='conv2')
         print net.get_shape()
-        net = slim.conv2d(net,num_outputs=32,kernel_size=[3,3],stride=1,scope='conv3')
+        net = slim.conv2d(net,num_outputs=64,kernel_size=[3,3],stride=1,scope='conv3')
         print net.get_shape()
         #batch*H*W*2
         conv4_1 = slim.conv2d(net,num_outputs=2,kernel_size=[1,1],stride=1,scope='conv4_1',activation_fn=tf.nn.softmax)
@@ -154,11 +154,11 @@ def P_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
             bbox_loss = bbox_ohem(bbox_pred,bbox_target,label)
             #batch*10
             landmark_pred = tf.squeeze(landmark_pred, [1,2], name="landmark_pred")
-            landmark_loss = landmark_ohem(landmark_pred,landmark_target,label)
+            landmark_loss = landmark_ohem(landmark_pred, landmark_target, label) 
 
-            accuracy = cal_accuracy(cls_prob,label)
+            accuracy = cal_accuracy(cls_prob, label)
             L2_loss = tf.add_n(slim.losses.get_regularization_losses())
-            return cls_loss,bbox_loss,landmark_loss,L2_loss,accuracy
+            return cls_loss,bbox_loss,landmark_loss,L2_loss,accuracy, landmark_target
         #test
         else:
             #when test,batch_size = 1

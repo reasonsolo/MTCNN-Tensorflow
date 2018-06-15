@@ -24,5 +24,5 @@ if __name__ == '__main__':
     prefix = model_path
     end_epoch = 30
     display = 1000
-    lr = 0.00000
+    lr = 0.001
     train_RNet(base_dir, prefix, end_epoch, display, lr)

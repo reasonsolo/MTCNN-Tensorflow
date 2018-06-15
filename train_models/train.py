@@ -1,5 +1,6 @@
 #coding:utf-8
 import tensorflow as tf
+from tensorflow.python import debug as tf_debug
 import numpy as np
 import os
 from datetime import datetime
@@ -106,30 +107,30 @@ def train(net_factory, prefix, end_epoch, base_dir,
     landmark_size = config.LANDMARK_SIZE
     landmark_len = landmark_size * 2
     #PNet use this method to get data
-    if net == 'PNet':
-        #dataset_dir = os.path.join(base_dir,'train_%s_ALL.tfrecord_shuffle' % net)
-        dataset_dir = os.path.join(base_dir,'train_%s_landmark.tfrecord_shuffle' % net)
-        print dataset_dir
-        image_batch, label_batch, bbox_batch,landmark_batch = read_single_tfrecord(dataset_dir, config.BATCH_SIZE, net)
+    #if net == 'PNet':
+    #    #dataset_dir = os.path.join(base_dir,'train_%s_ALL.tfrecord_shuffle' % net)
+    #    dataset_dir = os.path.join(base_dir,'train_%s_landmark.tfrecord_shuffle' % net)
+    #    print dataset_dir
+    #    image_batch, label_batch, bbox_batch,landmark_batch = read_single_tfrecord(dataset_dir, config.BATCH_SIZE, net)
 
-    #RNet use 3 tfrecords to get data
-    else:
-        pos_dir = os.path.join(base_dir,'pos_landmark.tfrecord_shuffle')
-        part_dir = os.path.join(base_dir,'part_landmark.tfrecord_shuffle')
-        neg_dir = os.path.join(base_dir,'neg_landmark.tfrecord_shuffle')
-        landmark_dir = os.path.join(base_dir,'landmark_landmark.tfrecord_shuffle')
-        dataset_dirs = [pos_dir,part_dir,neg_dir,landmark_dir]
-        pos_radio = 1.0/6;part_radio = 1.0/6;landmark_radio=1.0/6;neg_radio=3.0/6
-        pos_batch_size = int(np.ceil(config.BATCH_SIZE*pos_radio))
-        assert pos_batch_size != 0,"Batch Size Error "
-        part_batch_size = int(np.ceil(config.BATCH_SIZE*part_radio))
-        assert part_batch_size != 0,"Batch Size Error "
-        neg_batch_size = int(np.ceil(config.BATCH_SIZE*neg_radio))
-        assert neg_batch_size != 0,"Batch Size Error "
-        landmark_batch_size = int(np.ceil(config.BATCH_SIZE*landmark_radio))
-        assert landmark_batch_size != 0,"Batch Size Error "
-        batch_sizes = [pos_batch_size,part_batch_size,neg_batch_size,landmark_batch_size]
-        image_batch, label_batch, bbox_batch,landmark_batch = read_multi_tfrecords(dataset_dirs,batch_sizes, net)
+    ##RNet use 3 tfrecords to get data
+    #else:
+    pos_dir = os.path.join(base_dir,'pos_landmark.tfrecord_shuffle')
+    part_dir = os.path.join(base_dir,'part_landmark.tfrecord_shuffle')
+    neg_dir = os.path.join(base_dir,'neg_landmark.tfrecord_shuffle')
+    landmark_dir = os.path.join(base_dir,'landmark_landmark.tfrecord_shuffle')
+    dataset_dirs = [pos_dir,part_dir,neg_dir,landmark_dir]
+    pos_radio = 1.0/6;part_radio = 1.0/6;landmark_radio=1.0/6;neg_radio=3.0/6
+    pos_batch_size = int(np.ceil(config.BATCH_SIZE*pos_radio))
+    assert pos_batch_size != 0,"Batch Size Error "
+    part_batch_size = int(np.ceil(config.BATCH_SIZE*part_radio))
+    assert part_batch_size != 0,"Batch Size Error "
+    neg_batch_size = int(np.ceil(config.BATCH_SIZE*neg_radio))
+    assert neg_batch_size != 0,"Batch Size Error "
+    landmark_batch_size = int(np.ceil(config.BATCH_SIZE*landmark_radio))
+    assert landmark_batch_size != 0,"Batch Size Error "
+    batch_sizes = [pos_batch_size,part_batch_size,neg_batch_size,landmark_batch_size]
+    image_batch, label_batch, bbox_batch,landmark_batch = read_multi_tfrecords(dataset_dirs,batch_sizes, net)
 
     #landmark_dir
     if net == 'PNet':
@@ -177,6 +178,7 @@ def train(net_factory, prefix, end_epoch, base_dir,
     MAX_STEP = int(num / config.BATCH_SIZE + 1) * end_epoch
     epoch = 0
     sess.graph.finalize()
+    #sess = tf_debug.LocalCLIDebugWrapperSession(sess)
     try:
         for step in range(MAX_STEP):
             i = i + 1
@@ -185,14 +187,14 @@ def train(net_factory, prefix, end_epoch, base_dir,
             image_batch_array, label_batch_array, bbox_batch_array,landmark_batch_array = sess.run([image_batch, label_batch, bbox_batch,landmark_batch])
             #random flip
             # image_batch_array,landmark_batch_array = random_flip_images(image_batch_array,label_batch_array,landmark_batch_array)
-            print image_batch_array.shape
-            print label_batch_array.shape
-            print bbox_batch_array.shape
-            print landmark_batch_array.shape
-            print label_batch_array[0]
-            print bbox_batch_array[0]
-            print landmark_batch_array[0]
-            _,_,summary = sess.run([train_op, lr_op ,summary_op], feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array,landmark_target:landmark_batch_array})
+            # print image_batch_array.shape
+            # print label_batch_array.shape
+            # print bbox_batch_array.shape
+            # print landmark_batch_array.shape
+            # print label_batch_array[0]
+            # print bbox_batch_array[0]
+            # print landmark_batch_array[0]
+            _,_,summary = sess.run([train_op, lr_op, summary_op], feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array,landmark_target:landmark_batch_array})
 
             if (step+1) % display == 0:
                 #acc = accuracy(cls_pred, labels_batch)
@@ -205,6 +207,7 @@ def train(net_factory, prefix, end_epoch, base_dir,
                                                              feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array, landmark_target: landmark_batch_array})
                 print("%s : Step: %d, accuracy: %3f, cls loss: %4f, bbox loss: %4f, landmark loss: %4f,L2 loss: %4f,lr:%f " % (
                 datetime.now(), step+1, acc, cls_loss, bbox_loss, landmark_loss, L2_loss, lr))
+
             #save every two epochs
             if i * config.BATCH_SIZE > num*2:
                 epoch = epoch + 1

@@ -9,7 +9,7 @@ def read_muct_annotation(path):
         next(iterlines)
         for line in iterlines:
             segs = line.strip().split(',')
-            img_file, landmarks = segs[0], [float(i) for i in segs[1:]]
+            img_file, landmarks = segs[0], [float(i) for i in segs[2:]]
             yield img_file, zip(landmarks[::2], landmarks[1::2])
 
 def load_muct_annotation(filepath):

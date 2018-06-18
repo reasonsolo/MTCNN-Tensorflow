@@ -8,6 +8,7 @@ from nms import py_nms
 
 LANDMARK_SIZE = config.LANDMARK_SIZE
 
+
 class MtcnnDetector(object):
 
 
@@ -194,7 +195,7 @@ class MtcnnDetector(object):
             boxes after calibration
         """
         h, w, c = im.shape
-        net_size = 12
+        net_size = config.IMAGE_SIZES['PNet']
 
         current_scale = float(net_size) / self.min_face_size  # find initial scale
         # print("current_scale", net_size, self.min_face_size, current_scale)
@@ -262,14 +263,15 @@ class MtcnnDetector(object):
         h, w, c = im.shape
         dets = self.convert_to_square(dets)
         dets[:, 0:4] = np.round(dets[:, 0:4])
+        net_size = config.IMAGE_SIZES['RNet']
 
         [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = self.pad(dets, w, h)
         num_boxes = dets.shape[0]
-        cropped_ims = np.zeros((num_boxes, 24, 24, 3), dtype=np.float32)
+        cropped_ims = np.zeros((num_boxes, net_size, net_size, 3), dtype=np.float32)
         for i in range(num_boxes):
             tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
             tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
-            cropped_ims[i, :, :, :] = (cv2.resize(tmp, (24, 24))-127.5) / 128
+            cropped_ims[i, :, :, :] = (cv2.resize(tmp, (net_size, net_size))-127.5) / 128
         #cls_scores : num_data*2
         #reg: num_data*4
         #landmark: num_data*10
@@ -310,12 +312,13 @@ class MtcnnDetector(object):
         dets = self.convert_to_square(dets)
         dets[:, 0:4] = np.round(dets[:, 0:4])
         [dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph] = self.pad(dets, w, h)
+        net_size = config.IMAGE_SIZES['ONet']
         num_boxes = dets.shape[0]
-        cropped_ims = np.zeros((num_boxes, 48, 48, 3), dtype=np.float32)
+        cropped_ims = np.zeros((num_boxes, net_size, net_size, 3), dtype=np.float32)
         for i in range(num_boxes):
             tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
             tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
-            cropped_ims[i, :, :, :] = (cv2.resize(tmp, (48, 48))-127.5) / 128
+            cropped_ims[i, :, :, :] = (cv2.resize(tmp, (net_size, net_size))-127.5) / 128
 
         cls_scores, reg,landmark = self.onet_detector.predict(cropped_ims)
         #prob belongs to face

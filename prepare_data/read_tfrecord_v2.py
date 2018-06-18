@@ -27,12 +27,7 @@ def read_single_tfrecord(tfrecord_file, batch_size, net):
             'image/landmark': tf.FixedLenFeature([LANDMARK_LEN],tf.float32)
         }
     )
-    if net == 'PNet':
-        image_size = 12
-    elif net == 'RNet':
-        image_size = 24
-    else:
-        image_size = 48
+    image_size = config.IMAGE_SIZES[net]
     image = tf.decode_raw(image_features['image/encoded'], tf.uint8)
     image = tf.reshape(image, [image_size, image_size, 3])
     image = (tf.cast(image, tf.float32)-127.5) / 128

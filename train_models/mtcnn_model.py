@@ -124,7 +124,7 @@ def P_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
                         weights_regularizer=slim.l2_regularizer(0.0005),
                         padding='valid'):
         print inputs.get_shape()
-        net = slim.conv2d(inputs, 10, 3, stride=1,scope='conv1')
+        net = slim.conv2d(inputs, 20, 3, stride=1,scope='conv1')
         print net.get_shape()
         net = slim.max_pool2d(net, kernel_size=[2,2], stride=2, scope='pool1', padding='SAME')
         print net.get_shape()
@@ -154,11 +154,11 @@ def P_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
             bbox_loss = bbox_ohem(bbox_pred,bbox_target,label)
             #batch*10
             landmark_pred = tf.squeeze(landmark_pred, [1,2], name="landmark_pred")
-            landmark_loss = landmark_ohem(landmark_pred, landmark_target, label) 
+            landmark_loss = landmark_ohem(landmark_pred, landmark_target, label)
 
             accuracy = cal_accuracy(cls_prob, label)
             L2_loss = tf.add_n(slim.losses.get_regularization_losses())
-            return cls_loss,bbox_loss,landmark_loss,L2_loss,accuracy, landmark_target
+            return cls_loss,bbox_loss,landmark_loss,L2_loss,accuracy
         #test
         else:
             #when test,batch_size = 1
@@ -217,19 +217,21 @@ def O_Net(inputs,label=None,bbox_target=None,landmark_target=None,training=True)
                         weights_regularizer=slim.l2_regularizer(0.0005),
                         padding='valid'):
         print inputs.get_shape()
-        net = slim.conv2d(inputs, num_outputs=32, kernel_size=[3,3], stride=1, scope="conv1")
+        net = slim.conv2d(inputs, num_outputs=96, kernel_size=[3,3], stride=1, scope="conv1")
         print net.get_shape()
         net = slim.max_pool2d(net, kernel_size=[3, 3], stride=2, scope="pool1", padding='SAME')
         print net.get_shape()
-        net = slim.conv2d(net,num_outputs=64,kernel_size=[3,3],stride=1,scope="conv2")
+        net = slim.conv2d(net,num_outputs=128,kernel_size=[3,3],stride=1,scope="conv2")
         print net.get_shape()
         net = slim.max_pool2d(net, kernel_size=[3, 3], stride=2, scope="pool2")
         print net.get_shape()
-        net = slim.conv2d(net,num_outputs=64,kernel_size=[3,3],stride=1,scope="conv3")
+        net = slim.conv2d(net,num_outputs=128,kernel_size=[3,3],stride=1,scope="conv3")
         print net.get_shape()
         net = slim.max_pool2d(net, kernel_size=[2, 2], stride=2, scope="pool3", padding='SAME')
         print net.get_shape()
-        net = slim.conv2d(net,num_outputs=128,kernel_size=[2,2],stride=1,scope="conv4")
+        net = slim.conv2d(net,num_outputs=192,kernel_size=[2,2],stride=1,scope="conv4")
+        print net.get_shape()
+        net = slim.max_pool2d(net, kernel_size=[2, 2], stride=2, scope="pool4", padding='SAME')
         print net.get_shape()
         fc_flatten = slim.flatten(net)
         print fc_flatten.get_shape()

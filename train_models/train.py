@@ -150,7 +150,7 @@ def train(net_factory, prefix, end_epoch, base_dir,
     bbox_target = tf.placeholder(tf.float32, shape=[config.BATCH_SIZE, 4], name='bbox_target')
     landmark_target = tf.placeholder(tf.float32,shape=[config.BATCH_SIZE, landmark_len], name='landmark_target')
     #class,regression
-    cls_loss_op,bbox_loss_op,landmark_loss_op,L2_loss_op,accuracy_op, plandmark = net_factory(input_image, label, bbox_target,landmark_target,training=True)
+    cls_loss_op,bbox_loss_op,landmark_loss_op,L2_loss_op,accuracy_op = net_factory(input_image, label, bbox_target,landmark_target,training=True)
     #train,update learning rate(3 loss)
     train_op, lr_op = train_model(base_lr, radio_cls_loss*cls_loss_op + radio_bbox_loss*bbox_loss_op + radio_landmark_loss*landmark_loss_op + L2_loss_op, num)
     # init

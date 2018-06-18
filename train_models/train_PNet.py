@@ -27,5 +27,5 @@ if __name__ == '__main__':
     prefix = model_path
     end_epoch = 30
     display = 100
-    lr = 0.001
+    lr = 0.01
     train_PNet(base_dir, prefix, end_epoch, display, lr)

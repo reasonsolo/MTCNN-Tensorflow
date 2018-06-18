@@ -5,6 +5,7 @@ from Detection.MtcnnDetector import MtcnnDetector
 from Detection.detector import Detector
 from Detection.fcn_detector import FcnDetector
 from train_models.mtcnn_model import P_Net, R_Net, O_Net
+from train_models.MTCNN_config import config
 import cv2
 import numpy as np
 
@@ -17,13 +18,13 @@ shuffle = False
 #vis = True
 detectors = [None, None, None]
 prefix = ['../data/MTCNN_model/PNet_landmark/PNet', '../data/MTCNN_model/RNet_landmark/RNet', '../data/MTCNN_model/ONet_landmark/ONet']
-epoch = [18, 14, 16]
+epoch = [24, 26, 30]
 model_path = ['%s-%s' % (x, y) for x, y in zip(prefix, epoch)]
 PNet = FcnDetector(P_Net, model_path[0])
 detectors[0] = PNet
-RNet = Detector(R_Net, 24, 1, model_path[1])
+RNet = Detector(R_Net, config.IMAGE_SIZES['RNet'], 1, model_path[1])
 detectors[1] = RNet
-ONet = Detector(O_Net, 48, 1, model_path[2])
+ONet = Detector(O_Net, config.IMAGE_SIZES['ONet'], 1, model_path[2])
 detectors[2] = ONet
 videopath = "./video_test.avi"
 mtcnn_detector = MtcnnDetector(detectors=detectors, min_face_size=min_face_size,

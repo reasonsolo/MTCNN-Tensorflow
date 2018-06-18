@@ -132,12 +132,13 @@ def t_net(prefix, epoch, batch_size, test_mode="PNet",
           thresh=[0.6, 0.6, 0.7], min_face_size=25,
           stride=2, slide_window=False, shuffle=False, vis=False, skip_detect=False):
     detectors = [None, None, None]
+    image_size = config.IMAGE_SIZES[test_mode]
     #PNet-echo
     model_path = ['%s-%s' % (x, y) for x, y in zip(prefix, epoch)]
     print("Test model %s, path %s" % (test_mode, model_path[0]))
     # load pnet model
     if slide_window:
-        PNet = Detector(P_Net, 12, batch_size[0], model_path[0])
+        PNet = Detector(P_Net, image_size, batch_size[0], model_path[0])
     else:
         PNet = FcnDetector(P_Net, model_path[0])
     detectors[0] = PNet
@@ -145,13 +146,13 @@ def t_net(prefix, epoch, batch_size, test_mode="PNet",
     # load rnet model
     if test_mode in ["RNet", "ONet"]:
         print("==================================", test_mode)
-        RNet = Detector(R_Net, 24, batch_size[1], model_path[1])
+        RNet = Detector(R_Net, image_size, batch_size[1], model_path[1])
         detectors[1] = RNet
 
     # load onet model
     if test_mode == "ONet":
         print("==================================", test_mode)
-        ONet = Detector(O_Net, 48, batch_size[2], model_path[2])
+        ONet = Detector(O_Net, image_size, batch_size[2], model_path[2])
         detectors[2] = ONet
 
     basedir = '.'
@@ -195,7 +196,7 @@ def parse_args():
                         default=['../data/MTCNN_model/PNet_landmark/PNet', '../data/MTCNN_model/RNet_landmark/RNet', '../data/MTCNN_model/ONet/ONet'],
                         type=str)
     parser.add_argument('--epoch', dest='epoch', help='epoch number of model to load', nargs="+",
-                        default=[20, 20, 22], type=int)
+                        default=[22, 22, 22], type=int)
     parser.add_argument('--batch_size', dest='batch_size', help='list of batch size used in prediction', nargs="+",
                         default=[2048, 256, 16], type=int)
     parser.add_argument('--thresh', dest='thresh', help='list of thresh for pnet, rnet, onet', nargs="+",
@@ -218,10 +219,9 @@ if __name__ == '__main__':
     args = parse_args()
     if args.test_mode == 'PNet':
         net = 'RNet' # change this
-        image_size = 24
     elif args.test_mode == "RNet":
         net = "ONet"
-        image_size = 48
+    image_size = config.IMAGE_SIZES[net]
 
     base_dir = '../prepare_data/WIDER_train'
     data_dir = '%s' % net

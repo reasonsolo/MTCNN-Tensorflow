@@ -12,13 +12,8 @@ import numpy as np
 
 LANDMARK_LEN = config.LANDMARK_SIZE * 2
 
-NETS_IMG_SIZE = {
-    'PNet': 12,
-    'RNet': 24,
-    'ONet': 48
-}
-
-RANDOM_SHIFT_TIMES = 20
+NETS_IMG_SIZE = config.IMAGE_SIZES
+RANDOM_SHIFT_TIMES = 50
 
 IOU_POS = 0.65
 IOU_NEG = 0.3

@@ -1,2 +1,2 @@
-model_checkpoint_path: "RNet-30"
-all_model_checkpoint_paths: "RNet-30"
+model_checkpoint_path: "RNet-28"
+all_model_checkpoint_paths: "RNet-28"
